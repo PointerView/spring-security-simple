@@ -1,15 +1,13 @@
 package com.danihc.cursos.api.spring_security.services.auth;
 
-import io.jsonwebtoken.Header;
-import io.jsonwebtoken.JwtBuilder;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.SecretKey;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
@@ -29,21 +27,31 @@ public class JwtService {
         Date expiration = new Date((EXPIRATION_IN_MINUTES * 60 * 1000) + issuedAt.getTime());
 
         String jwt = Jwts.builder()
+                .header()
+                    .type("JWT")
+                    .and()
                 .subject(user.getUsername())
                 .issuedAt(issuedAt)
                 .expiration(expiration)
                 .claims(extraClaims)
-                .setHeaderParam(Header.TYPE, Header.JWT_TYPE)
-                .signWith(generateKey(), SignatureAlgorithm.HS256)
-                .compact()
-;
+                .signWith(generateKey(), Jwts.SIG.HS256)
+                .compact();
 
         return jwt;
     }
 
-    private Key generateKey() {
+    private SecretKey generateKey() {
         byte[] passwordDecoded = Decoders.BASE64.decode(SECRET_KEY);
         System.out.println("passwordDecoded = " + new String(passwordDecoded));
         return Keys.hmacShaKeyFor(passwordDecoded);
+    }
+
+    public String extractUsername(String jwt) {
+        return extractAllClaims(jwt).getSubject();
+    }
+
+    private Claims extractAllClaims(String jwt) {
+        return Jwts.parser().verifyWith(generateKey()).build()
+                .parseSignedClaims(jwt).getPayload();
     }
 }
