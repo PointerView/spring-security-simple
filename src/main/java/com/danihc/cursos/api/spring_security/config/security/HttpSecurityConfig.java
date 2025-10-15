@@ -1,6 +1,7 @@
 package com.danihc.cursos.api.spring_security.config.security;
 
 import com.danihc.cursos.api.spring_security.config.security.filter.JwtAuthenticationFilter;
+import com.danihc.cursos.api.spring_security.config.security.handler.CustomAutenticationEntryPoint;
 import com.danihc.cursos.api.spring_security.persistence.util.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -13,6 +14,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.RegexRequestMatcher;
@@ -28,6 +30,9 @@ public class HttpSecurityConfig {
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    @Autowired
+    private AuthenticationEntryPoint authenticationEntryPoint;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         SecurityFilterChain filterChain = http.csrf(AbstractHttpConfigurer::disable) // 1
@@ -35,7 +40,10 @@ public class HttpSecurityConfig {
                         sessMagConfig.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 //.authenticationProvider(daoAuthProvider) // 2
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                //.authorizeHttpRequests(HttpSecurityConfig::buildRequestMatchersV2)
+                .authorizeHttpRequests(HttpSecurityConfig::buildRequestMatchers)
+                .exceptionHandling(exceptionConfig -> {
+                    exceptionConfig.authenticationEntryPoint(authenticationEntryPoint);
+                })
                 .build();
         return filterChain;
     }
