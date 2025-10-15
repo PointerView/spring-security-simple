@@ -5,10 +5,12 @@ import com.danihc.cursos.api.spring_security.persistence.entities.Product;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.Optional;
 
 public interface ProductService {
+
     public Page<Product> findAll(Pageable pageable);
 
     Optional<Product> findOneById(Long productId);

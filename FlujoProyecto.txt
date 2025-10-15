@@ -1,0 +1,151 @@
+
+========================== SECURITY FILTER CHAIN ==========================
+
+1.- http.csrf(AbstractHttpConfigurer::disable)
+Desactiva el metodo de seguridad de cross no se que mas ya que funciona por detras con tokens y como
+ya estamos trabajando con tokens es mejor desactibarlo.
+
+2.- authenticationProvider(daoAuthProvider)
+El metodo recibe como argumento un objeto de tipo AuthenticationProvider que es el metodo que contiene
+la estrategia de autenticacion, en este caso el objeto es una implementacion de la interfaz AuthenticationProvider
+que es DaoAuthenticationProvider que contiene el UserDetailService y la implementacion del PasswordEncoder, el
+primero seria usado por el AuthenticationManager con su metodo authenticate para obtener el UserDetails mediante
+el username, y el PasswordEncoder para conparar el password del UserDetails encodificado por el PasswordEncoder
+con el password retornado por el repository que ya deberia de estar encirptado.
+Antes se hacia esto con un filtro pero la idea de spring es delegar esto al sistema y no programarlo nosotros
+mismos.
+
+3.- addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+El metodo recibe dos argumentos, uno es el filter a agregar y el otro es otro filtro el cual se usara como
+punto de ejecucion del primero, siempre se ejecutara el primer filtro antes del indicado en el segundo argumento.
+Esto es muy util para tener control sobre el orden de ejecucion de los filtros.
+En este caso se usa un filtro que se ejecuta siempre antes del UsernamePasswordAuthenticationFilter para poder
+validar el token y agregarlo al SecurityContext y esto no quiere decir que UsernamePasswordAuthenticationFilter
+este activo, solo se obtiene su posición en la cadena como referencia para indicar la posicion de ejecucion
+del nustro filtro personalizado pero no importa si esta o no activo el UsernamePasswordAuthenticationFilter ya que
+en configuraciones STATELESS muchos filters estan inactivos pero se pueden obtener su orden de ejecucion. Poner
+la ejecucion antes de UsernamePasswordAuthenticationFilter es porque ahi es donde spring pondria sus filtros
+de autenticacion tradicionales
+
+
+
+========================== CONTROLLER CUSTOMERCONTROLLER ==========================
+
+====== REGISTRO Y JWT A LA VEZ DE UN USER CUSTOMER ======
+
+1.- Request al controller de /customers @PostMapping con el name, username, y password/repeatedPassword, en el authenticationService
+se usa el userService para crear y persistir el nuevo user y luego en el mismo authenticationService se aprovecha para crear el DTO
+del RegisteredUser y se genera el JWT en base a el con el jwtService.generateToken() al cual se le pasa el user y un metodo que
+retorna un Map con claims extras que son el name, role y authorities. Dentro del metodo generateToken se hace uso de la clase utility
+Jwts y el metodo builder y ahi ya se crea el JWT con el header, subject, issuedAt, expiration, los claims del MAP pasado y por ultimo
+el signWith que seria la firma usada, en el caso del proyecto seria una creada a mano y publica pero se podria hacer uso del 
+Jwts.SIG.HS256.key().build() para que se construya una mas segura y pudiendo elegir en el mismo proceso el tipo de firla a usar. Luego
+con el compact genera el String del token.
+En resumen se diria que en el proceso de registro de un CUSTOMER a la vez se genera el token y se devuelve.
+
+
+========================== CONTROLLER AUTHENTICATIONCONTROLLER ==========================
+
+====== VALIDACION DE UN TOKEN MEDIANTE CONTROLLER PERSONALIZADO ======
+
+1.- Request al controller de /auth al metodo /validate-token que llama al authenticationService.validateToken y se le pasa el token
+recibido por RequestParam en el metodo controller, dentro de el para validarlo solo obtiene el username ya que si esta el username
+significa que el JWT esta contruido y por ende de forma completa. Para obtener el Username usa el jwtService.extractUsername pasando
+el JWT desde el cual con el metodo extractAllClaims con el JWT se hace uso del meetodo de la clase utilities Jwts.parser() que sirve
+para pasar el JWT a un objeto, se le pasa al metodo verifyWith la SecretKey usada para firmarlo y se usa build() para construir el 
+parser, luego se hace uso de su metodo parseSignedClaims() que se le pasa el token a parsear y luego el metodo .getPayload para obtener
+la carga util del mismo, desde ese objeto Claims se tiene acceso a getSubject() que retorna el username.
+Si en todo este proceso no da ninguna excepcion terminara retornando true confirmando la validacion del token.
+
+
+====== LOGIN MEDIANTE USER Y PASSWORD PARA OBTENER JWT ======
+
+1.- Request a /authenticate que recibe un objeto DTO por body de tipo AuthenticationRequest que solo tiene el username y password, 
+despues se hace uso de authenticationService.login que crea un objeto Authentication con su implementacion UsernamePasswordAuthenticationToken
+al cual se le pasa el username y password pasados a la request para luego pasar ese objeto al metodo authenticationManager.authenticate, este
+detras busca una implementacion del UserDetailService, en nuestro caso es un @Bean y obtiene el User del repo para comparar los passwords 
+usando la implementacion del PasswordEncoder que en nuestro caso tambien es un @Bean con la implementacion de BCriptEncoder. Si los passwords
+coinciden no pasa nada pero si no coinciden retornara una excepcion AuthenticationException. Ademas agrega el objeto Authentication que genera
+el metodo authenticationManager.authenticate en el SecurityContext durante la duracion del hilo.
+
+
+====== OBTENER PERFIL DEL USUARIO ======
+
+1.- Se hace mediante una request a /profile que usa el metodo authenticationService.findLoggedInUser el cual retorna el objeto User con
+todos sus datos, el metodo por dentro obtiene el objeto Authentication(porque claramente para obtener el perfil del user, este deberia 
+de estar logueado) que lo obtiene del SecurityContext que ya contiene el objeto Authentication incluido por parte del filter de
+JwtAuthenticationFilter, y este objeto se castea a un UsernamePasswordAuthenticationToken para poder hacer uso de la implementacion
+del metodo getPrincipal() y asi obtener el username el cual se usara para pasarlo al userService.findOneByUsername que mediante su
+repository obtendra el objeto User completo el cual sera el retornado por el controller.
+El contenido sera el completo del objeto User pero si se quiere limitar el contenido a mostrar se podria hacer uso de una clase DTO.
+
+====== ASIGNACION DEL AUTHENTICATION EN EL SECURITY CONTEXT ======
+
+1.- Para ello se usa el filtro  JwtAuthenticationFilter extends OncePerRequestFilter que se agrega antes del proceso interno de Authentication
+propio de Spring boot, esto hace que todas las peticiones primero validen si tiene o no token:
+String authorizationHeader = request.getHeader("Authorization");
+        if(!StringUtils.hasText(authorizationHeader) || !authorizationHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+2.-Para posteriormente si lo tiene poder decodificarlo y obtener el username usado para junto el userService.findOneByUsername obtener el User 
+completo, esto se hace para asi tener tanto el username que se consigue del token, como los authorities los cuales no tenemos, solo los roles,
+finalmente se crea el Authorization con su implementacion UsernamePasswordAuthenticationToken al cual se le pasa el principal que seria el
+username, los credentials que se pueden o no pasar, y los authorities. Tambien se puede hacer uso del metodo setDetails de la implementacion
+del Authentication para agregar info extra al Authentication.
+
+3.- Finalmente cuando se tiene el objeto completo se agrega al SecurityContext obtenido del SecurityContextHolder mediante su metodo getContext()
+y con el metodo setAuthentication() pasar el objeto Authentication, de este modo durante toda la duracion del hilo de la request se podra tener
+acceso a este objeto y asi poder posteriormente validar y autorizar el acceso a endpoints.
+
+
+
+
+================================== APUNTES VARIOS ==================================
+
+======== FILTERS ========
+
+Hay dos tipos de filtros que serian los siguientes:
+
+- Filtros sin orden especifico: Estos no tienen un orden especifico de ejecucion y se indica en el addFilterBefore o addFilterAfter. Ademas
+estos filtros por detras no incluyen ninguna funcionalidad y todo lo que hagan sera lo que le implementemos. Los filtros serian:
+· OncePerRequestFilter(Asegura una sola ejecucion por request)
+· GenericFilterBean
+· Interfaz directa Filter
+
+-FIltros con orden especifico: Son filtros que ya tienen un orden prestablecido y que no funcionaria con addFilterBefore o addFilterAfter ya
+que serian ignorados, ademas estos filtros si que vienen con ciertas funciones establecidas, estos serian:
+· UsernamePasswordAuthenticationFilter en posicion aproximada 15
+	// ✅ Funcionalidad BUILT-IN:
+    // ✅ Detecta POST /login automáticamente
+    // ✅ Extrae username/password del form-data
+    // ✅ Llama al AuthenticationManager
+    // ✅ Maneja éxito/error de autenticación
+· BasicAuthenticationFilter en posicion aproximada 18
+	// ✅ Funcionalidad BUILT-IN:
+    // ✅ Lee header Authorization: Basic
+    // ✅ Decodifica base64(username:password)
+    // ✅ Valida credenciales automáticamente
+· BearerTokenAuthenticationFilter en posicion aproximada 13
+	// ✅ Extrae automáticamente: Authorization: Bearer <token>
+    // ✅ Valida el token OAuth2 con un AuthenticationManager
+    // ✅ Maneja tokens de acceso OAuth2/JWT
+    // ✅ Configura el SecurityContext con la autenticación
+· CsrfFilter en posicion aproximada 6
+	// ✅ Funcionalidad BUILT-IN:
+    // ✅ Genera tokens CSRF
+    // ✅ Valida tokens en requests POST/PUT/DELETE
+    // ✅ Protección automática contra CSRF
+· LogoutFilter en posicion aproximada 7
+	// ✅ Detecta requests de logout (POST /logout por defecto)
+    // ✅ Ejecuta LogoutHandlers (invalidar sesión, limpiar cookies)
+    // ✅ Redirige a página de éxito
+    // ✅ Maneja CSRF para logout
+
+
+======== ORDEN DE FILTERS PROPIOS DE SPRING ========
+
+Todos los filtros personalizados de spring tienen sus propias funcionalidades y ademas tienen su
+orden en la cadena de filtros ya establecido, si no se implementan se ejecutaran por defecto pero
+si se implementan se sobreescribira su funcionalidad manteniendo su orden de ejecucion ya
+previamente prestablecido

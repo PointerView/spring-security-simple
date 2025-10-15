@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -21,6 +22,7 @@ public class ProductController {
     private ProductService productService;
 
     @GetMapping
+    @PreAuthorize("hasAuthority('READ_ALL_PRODUCTS')")
     public ResponseEntity<Page<Product>> findAll(Pageable pageable){
         Page<Product> productsPage = productService.findAll(pageable);
 
@@ -32,6 +34,7 @@ public class ProductController {
     }
 
     @GetMapping("/{productId}")
+    @PreAuthorize("hasAuthority('READ_ONE_PRODUCT')")
     public ResponseEntity<Product> findOneById(@PathVariable Long productId){
         Optional<Product> product = productService.findOneById(productId);
 
@@ -43,12 +46,14 @@ public class ProductController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('CREATE_ONE_PRODUCT')")
     public ResponseEntity<Product> createOne(@RequestBody @Valid SaveProduct saveProduct){
         Product product = productService.createOne(saveProduct);
         return ResponseEntity.status(HttpStatus.CREATED).body(product);
     }
 
     @PutMapping("/{productId}")
+    @PreAuthorize("hasAuthority('UPDATE_ONE_PRODUCT')")
     public ResponseEntity<Product> updateOneById(@PathVariable Long productId,
                                                  @RequestBody @Valid SaveProduct saveProduct){
         Product product = productService.updateOneById(productId, saveProduct);
@@ -56,7 +61,8 @@ public class ProductController {
     }
 
     @PutMapping("/{productId}/disabled")
-    public ResponseEntity<Product> disableObeById(@PathVariable Long productId){
+    @PreAuthorize("hasAuthority('DISABLE_ONE_PRODUCT')")
+    public ResponseEntity<Product> disableOneById(@PathVariable Long productId){
         Product product = productService.disableObeById(productId);
         return ResponseEntity.ok(product);
     }

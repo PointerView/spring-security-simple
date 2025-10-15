@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -23,6 +24,7 @@ public class CategoryController {
     private CategoryService categoryService;
 
     @GetMapping
+    @PreAuthorize("hasAuthority('READ_ALL_CATEGORIES')")
     public ResponseEntity<Page<Category>> findAll(Pageable pageable){
         Page<Category> categoryPage = this.categoryService.findAll(pageable);
 
@@ -34,6 +36,7 @@ public class CategoryController {
     }
 
     @GetMapping("/{categoryId}")
+    @PreAuthorize("hasAuthority('READ_ONE_CATEGORY')")
     public ResponseEntity<Category> findOneById(@PathVariable Long categoryId){
         Optional<Category> category = categoryService.findOneById(categoryId);
 
@@ -45,12 +48,14 @@ public class CategoryController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('CREATE_ONE_CATEGORY')")
     public ResponseEntity<Category> createOne(@RequestBody @Valid SaveCategory saveCategory){
         Category category = categoryService.createOne(saveCategory);
         return ResponseEntity.status(HttpStatus.CREATED).body(category);
     }
 
     @PutMapping("/{categoryId}")
+    @PreAuthorize("hasAuthority('UPDATE_ONE_CATEGORY')")
     public ResponseEntity<Category> updateOne(@PathVariable Long categoryId,
                                               @RequestBody @Valid SaveCategory saveCategory){
         Category category = categoryService.updateOne(categoryId, saveCategory);
@@ -58,6 +63,7 @@ public class CategoryController {
     }
 
     @PutMapping("/{categoryId}/disabled")
+    @PreAuthorize("hasAuthority('DISABLE_ONE_CATEGORY')")
     public ResponseEntity<Category> disableObeById(@PathVariable Long categoryId){
         Category category = categoryService.disableObeById(categoryId);
         return ResponseEntity.ok(category);

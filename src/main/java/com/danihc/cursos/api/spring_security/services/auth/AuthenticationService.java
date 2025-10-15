@@ -4,6 +4,7 @@ import com.danihc.cursos.api.spring_security.dto.RegisteredUser;
 import com.danihc.cursos.api.spring_security.dto.SaveUser;
 import com.danihc.cursos.api.spring_security.dto.auth.AuthenticationRequest;
 import com.danihc.cursos.api.spring_security.dto.auth.AuthenticationResponse;
+import com.danihc.cursos.api.spring_security.exceptions.ObjectNotFoundException;
 import com.danihc.cursos.api.spring_security.persistence.entities.User;
 import com.danihc.cursos.api.spring_security.services.UserService;
 import jakarta.validation.Valid;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -56,12 +58,13 @@ public class AuthenticationService {
     public AuthenticationResponse login(@Valid AuthenticationRequest authRequest) {
 
         Authentication authentication = new UsernamePasswordAuthenticationToken(
-                authRequest.getUsername(),
-                authRequest.getPassword());
+                authRequest.getUsername(), // Principal
+                authRequest.getPassword()); // Credentials
 
-        authenticationManager.authenticate(authentication);
+        // Retorna Authentication con info del user, si el passsword es incorrecto retorna excepcion
+        Authentication userAuthenticated = authenticationManager.authenticate(authentication);
 
-        UserDetails user = userService.findOneByUsername(authRequest.getUsername()).orElseThrow();
+        UserDetails user = (UserDetails) userAuthenticated.getPrincipal();
         String jwt = jwtService.generateToken(user, generateExtraClaims((User) user));
         AuthenticationResponse authRsp = new AuthenticationResponse();
         authRsp.setJwt(jwt);
@@ -77,5 +80,15 @@ public class AuthenticationService {
             System.out.println(e.getMessage());
             return false;
         }
+    }
+
+    public User findLoggedInUser() {
+        UsernamePasswordAuthenticationToken auth =
+                (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+
+        String username = auth.getPrincipal().toString();
+
+            return userService.findOneByUsername(username)
+                    .orElseThrow(() -> new ObjectNotFoundException("Username not found. Username: " + username));
     }
 }

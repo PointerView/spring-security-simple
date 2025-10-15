@@ -7,9 +7,6 @@ import com.danihc.cursos.api.spring_security.persistence.repositories.UserReposi
 import com.danihc.cursos.api.spring_security.persistence.util.Role;
 import com.danihc.cursos.api.spring_security.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -33,7 +30,7 @@ public class UserServiceImpl implements UserService {
         user.setUsername(newUser.getUsername());
         user.setName(newUser.getName());
         user.setPassword(passwordEncoder.encode(newUser.getPassword()));
-        user.setRole(Role.ROLE_CUSTOMER);
+        user.setRole(Role.CUSTOMER);
 
         return userRepository.save(user);
     }
