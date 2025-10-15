@@ -19,7 +19,7 @@ import org.springframework.security.web.util.matcher.RegexRequestMatcher;
 
 @Configuration
 @EnableWebSecurity // Habilita la seguridad web basada en Http Servlet
-@EnableMethodSecurity(prePostEnabled = true) // Habilita la configuración de seguridad mediante anotaciones
+// @EnableMethodSecurity(prePostEnabled = true) // Habilita la configuración de seguridad mediante anotaciones
 public class HttpSecurityConfig {
 
     @Autowired
