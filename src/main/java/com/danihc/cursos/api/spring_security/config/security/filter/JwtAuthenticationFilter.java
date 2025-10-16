@@ -1,9 +1,8 @@
 package com.danihc.cursos.api.spring_security.config.security.filter;
 
 import com.danihc.cursos.api.spring_security.exceptions.ObjectNotFoundException;
-import com.danihc.cursos.api.spring_security.persistence.entities.User;
+import com.danihc.cursos.api.spring_security.persistence.entities.security.User;
 import com.danihc.cursos.api.spring_security.services.UserService;
-import com.danihc.cursos.api.spring_security.services.auth.AuthenticationService;
 import com.danihc.cursos.api.spring_security.services.auth.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -12,7 +11,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;

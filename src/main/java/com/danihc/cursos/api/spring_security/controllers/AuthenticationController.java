@@ -2,7 +2,7 @@ package com.danihc.cursos.api.spring_security.controllers;
 
 import com.danihc.cursos.api.spring_security.dto.auth.AuthenticationRequest;
 import com.danihc.cursos.api.spring_security.dto.auth.AuthenticationResponse;
-import com.danihc.cursos.api.spring_security.persistence.entities.User;
+import com.danihc.cursos.api.spring_security.persistence.entities.security.User;
 import com.danihc.cursos.api.spring_security.services.auth.AuthenticationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;

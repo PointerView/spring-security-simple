@@ -2,9 +2,11 @@ package com.danihc.cursos.api.spring_security.services.impl;
 
 import com.danihc.cursos.api.spring_security.dto.SaveUser;
 import com.danihc.cursos.api.spring_security.exceptions.InvalidPasswordException;
-import com.danihc.cursos.api.spring_security.persistence.entities.User;
-import com.danihc.cursos.api.spring_security.persistence.repositories.UserRepository;
-import com.danihc.cursos.api.spring_security.persistence.util.Role;
+import com.danihc.cursos.api.spring_security.exceptions.ObjectNotFoundException;
+import com.danihc.cursos.api.spring_security.persistence.entities.security.Role;
+import com.danihc.cursos.api.spring_security.persistence.entities.security.User;
+import com.danihc.cursos.api.spring_security.persistence.repositories.security.UserRepository;
+import com.danihc.cursos.api.spring_security.services.RoleService;
 import com.danihc.cursos.api.spring_security.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +24,9 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private RoleService roleService;
+
     @Override
     public User registerOneCustomer(SaveUser newUser) {
         validatePassword(newUser);
@@ -30,7 +35,11 @@ public class UserServiceImpl implements UserService {
         user.setUsername(newUser.getUsername());
         user.setName(newUser.getName());
         user.setPassword(passwordEncoder.encode(newUser.getPassword()));
-        user.setRole(Role.CUSTOMER);
+
+        Role defaultRole = roleService.findDefaultRole()
+                .orElseThrow(() -> new ObjectNotFoundException("Role not found. Default Role"));
+
+        user.setRole(defaultRole);
 
         return userRepository.save(user);
     }

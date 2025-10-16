@@ -2,7 +2,7 @@ package com.danihc.cursos.api.spring_security.controllers;
 
 import com.danihc.cursos.api.spring_security.dto.RegisteredUser;
 import com.danihc.cursos.api.spring_security.dto.SaveUser;
-import com.danihc.cursos.api.spring_security.persistence.entities.User;
+import com.danihc.cursos.api.spring_security.persistence.entities.security.User;
 import com.danihc.cursos.api.spring_security.services.auth.AuthenticationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
 import java.util.List;
 
 @RestController

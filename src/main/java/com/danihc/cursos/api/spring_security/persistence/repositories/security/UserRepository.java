@@ -1,6 +1,6 @@
-package com.danihc.cursos.api.spring_security.persistence.repositories;
+package com.danihc.cursos.api.spring_security.persistence.repositories.security;
 
-import com.danihc.cursos.api.spring_security.persistence.entities.User;
+import com.danihc.cursos.api.spring_security.persistence.entities.security.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

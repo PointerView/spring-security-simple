@@ -1,7 +1,7 @@
 package com.danihc.cursos.api.spring_security.config.security;
 
 import com.danihc.cursos.api.spring_security.exceptions.ObjectNotFoundException;
-import com.danihc.cursos.api.spring_security.persistence.repositories.UserRepository;
+import com.danihc.cursos.api.spring_security.persistence.repositories.security.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
