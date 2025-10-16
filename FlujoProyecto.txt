@@ -36,7 +36,7 @@ de autenticacion tradicionales
 1.- Request al controller de /customers @PostMapping con el name, username, y password/repeatedPassword, en el authenticationService
 se usa el userService para crear y persistir el nuevo user y luego en el mismo authenticationService se aprovecha para crear el DTO
 del RegisteredUser y se genera el JWT en base a el con el jwtService.generateToken() al cual se le pasa el user y un metodo que
-retorna un Map con claims extras que son el name, role y authorities. Dentro del metodo generateToken se hace uso de la clase utility
+retorna un Map con claims extras que son el name, roleEnum y authorities. Dentro del metodo generateToken se hace uso de la clase utility
 Jwts y el metodo builder y ahi ya se crea el JWT con el header, subject, issuedAt, expiration, los claims del MAP pasado y por ultimo
 el signWith que seria la firma usada, en el caso del proyecto seria una creada a mano y publica pero se podria hacer uso del 
 Jwts.SIG.HS256.key().build() para que se construya una mas segura y pudiendo elegir en el mismo proceso el tipo de firla a usar. Luego
