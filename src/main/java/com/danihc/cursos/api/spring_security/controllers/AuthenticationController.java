@@ -1,9 +1,11 @@
 package com.danihc.cursos.api.spring_security.controllers;
 
+import com.danihc.cursos.api.spring_security.dto.LogoutResponse;
 import com.danihc.cursos.api.spring_security.dto.auth.AuthenticationRequest;
 import com.danihc.cursos.api.spring_security.dto.auth.AuthenticationResponse;
 import com.danihc.cursos.api.spring_security.persistence.entities.security.User;
 import com.danihc.cursos.api.spring_security.services.auth.AuthenticationService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +36,12 @@ public class AuthenticationController {
 
         AuthenticationResponse rsp = authenticationService.login(authenticationRequest);
         return ResponseEntity.ok(rsp);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<LogoutResponse> logout(HttpServletRequest req){
+        authenticationService.logout(req);
+        return ResponseEntity.ok(new LogoutResponse("Logout exitoso"));
     }
 
     // Retorna la info del perfil en base a un token

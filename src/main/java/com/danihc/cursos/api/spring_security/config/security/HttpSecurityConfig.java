@@ -42,12 +42,14 @@ public class HttpSecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        SecurityFilterChain filterChain = http.csrf(AbstractHttpConfigurer::disable) // 1
+        SecurityFilterChain filterChain = http
+                .csrf(AbstractHttpConfigurer::disable) // 1
                 .sessionManagement(sessMagConfig ->
                         sessMagConfig.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 //.authenticationProvider(daoAuthProvider) // 2
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .authorizeHttpRequests(authReqConfig -> authReqConfig.anyRequest().access(authorizationManager))
+                .authorizeHttpRequests(authReqConfig ->
+                        authReqConfig.anyRequest().access(authorizationManager))
                 .exceptionHandling(exceptionConfig -> {
                     exceptionConfig.authenticationEntryPoint(authenticationEntryPoint);
                     exceptionConfig.accessDeniedHandler(accessDeniedHandler);
@@ -109,7 +111,7 @@ public class HttpSecurityConfig {
 
 /*
 * 1.- http.csrf(AbstractHttpConfigurer::disable)
-* Desactiva el metodo de seguridad de cross no se que mas ya que funciona por detras con tokens y como
+* Desactiva el metodo de seguridad de cross, ya que funciona por detras con tokens y como
 * ya estamos trabajando con tokens es mejor desactibarlo.
 *
 * 2.- authenticationProvider(daoAuthProvider)

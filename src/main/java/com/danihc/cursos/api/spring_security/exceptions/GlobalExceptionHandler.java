@@ -29,6 +29,10 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiError);
     }
 
+    // Autenticado, pero sin suficientes permisos
+    /*Es la unica excepción que se puede lanzar con manejo mediante mótodos porque en el momento de entrar
+    * en un metodo ya se tiene el objeto Authentication aunque vacío dentro del security context por lo que
+    * se toma como que esta autenticado pero luego falla en la autorización*/
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<?> handlerAccessDeniedException(HttpServletRequest request,
                                                           AccessDeniedException exception){

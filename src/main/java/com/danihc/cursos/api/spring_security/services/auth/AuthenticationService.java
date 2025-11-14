@@ -5,19 +5,25 @@ import com.danihc.cursos.api.spring_security.dto.SaveUser;
 import com.danihc.cursos.api.spring_security.dto.auth.AuthenticationRequest;
 import com.danihc.cursos.api.spring_security.dto.auth.AuthenticationResponse;
 import com.danihc.cursos.api.spring_security.exceptions.ObjectNotFoundException;
+import com.danihc.cursos.api.spring_security.persistence.entities.security.JwtToken;
 import com.danihc.cursos.api.spring_security.persistence.entities.security.User;
+import com.danihc.cursos.api.spring_security.persistence.repositories.security.JwtTokenRepository;
 import com.danihc.cursos.api.spring_security.services.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class AuthenticationService {
@@ -31,8 +37,14 @@ public class AuthenticationService {
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    @Autowired
+    private JwtTokenRepository jwtRepository;
+
     public RegisteredUser registerOneCustomer(SaveUser newUser) {
         User user = userService.registerOneCustomer(newUser);
+        String jwt = jwtService.generateToken(user, generateExtraClaims(user));
+        saveUserToken(user, jwt);
+
 
         RegisteredUser userDto = new RegisteredUser();
         userDto.setId(user.getId());
@@ -40,10 +52,19 @@ public class AuthenticationService {
         userDto.setUsername(user.getUsername());
         userDto.setRole(user.getRole().getName());
 
-        String jwt = jwtService.generateToken(user, generateExtraClaims(user));
         userDto.setJwt(jwt);
 
         return userDto;
+    }
+
+    private void saveUserToken(User user, String jwt) {
+        JwtToken token = new JwtToken();
+        token.setToken(jwt);
+        token.setUser(user);
+        token.setExpiration(jwtService.extractExpiration(jwt));
+        token.setValid(true);
+
+        jwtRepository.save(token);
     }
 
     private Map<String, Object> generateExtraClaims(User user) {
@@ -66,6 +87,8 @@ public class AuthenticationService {
 
         UserDetails user = (UserDetails) userAuthenticated.getPrincipal();
         String jwt = jwtService.generateToken(user, generateExtraClaims((User) user));
+        saveUserToken((User) user, jwt);
+
         AuthenticationResponse authRsp = new AuthenticationResponse();
         authRsp.setJwt(jwt);
 
@@ -90,5 +113,20 @@ public class AuthenticationService {
 
             return userService.findOneByUsername(username)
                     .orElseThrow(() -> new ObjectNotFoundException("Username not found. Username: " + username));
+    }
+
+    public void logout(HttpServletRequest req){
+        String jwt = jwtService.extractJwtFromRequest(req);
+
+        if(!StringUtils.hasText(jwt)) return;
+
+        Optional<JwtToken> token = jwtRepository.findByToken(jwt);
+
+        if(token.isPresent() && token.get().isValid()){
+            token.get().setValid(false);
+            jwtRepository.save(token.get());
+
+        }
+
     }
 }

@@ -1,5 +1,6 @@
 package com.danihc.cursos.api.spring_security.persistence.entities.security;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -10,6 +11,7 @@ public class GrantedPermission {
     private Long id;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "role_id")
     private Role role;
 

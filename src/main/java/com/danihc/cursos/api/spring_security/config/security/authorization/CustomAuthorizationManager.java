@@ -33,6 +33,8 @@ public class CustomAuthorizationManager implements AuthorizationManager<RequestA
     @Autowired
     private UserService userService;
 
+    /*Realizacion del proceso de autorizacion mediante un AuthorizationManager personalizado que facilita
+    * tanto el Authentication como el request*/
     @Override
     public AuthorizationDecision check(Supplier<Authentication> authentication,
                                        RequestAuthorizationContext requestContext) {
@@ -99,10 +101,9 @@ public class CustomAuthorizationManager implements AuthorizationManager<RequestA
 
     private String extractUrl(HttpServletRequest request) {
 
-        String contextPath = request.getContextPath();
-        String url = request.getRequestURI();
-        url = url.replace(contextPath, "");
-        System.out.println(url);
+        String contextPath = request.getContextPath(); //  /api/v1
+        String url = request.getRequestURI(); // Retorna la URL sin host ni puerto
+        url = url.replace(contextPath, ""); // remove contextPath
 
         return url;
     }

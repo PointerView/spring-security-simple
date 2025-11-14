@@ -15,7 +15,6 @@ public class Role {
 
     private String name;
 
-    @JsonIgnore
     @OneToMany(mappedBy = "role", fetch = FetchType.EAGER)
     private List<GrantedPermission> permission;
 

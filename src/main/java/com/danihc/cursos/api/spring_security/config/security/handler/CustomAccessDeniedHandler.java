@@ -20,14 +20,8 @@ import java.time.LocalDateTime;
 @Component
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
-    //@Autowired
-    //private AccessDeniedHandler accessDeniedHandler;
-
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
-
-        // Llamar a una configuracion de manejo de excepcion para generalizarla en varias excepciones
-        //accessDeniedHandler.handle(request, response, new AccessDeniedException(""));
 
         ApiError apiError = new ApiError();
         apiError.setBackendMessage(accessDeniedException.getLocalizedMessage());
