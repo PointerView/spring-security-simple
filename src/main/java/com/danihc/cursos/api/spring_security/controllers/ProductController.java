@@ -12,10 +12,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/products")
+//@CrossOrigin
 public class ProductController {
 
     @Autowired
@@ -29,12 +31,13 @@ public class ProductController {
         if(productsPage.hasContent()){
             return ResponseEntity.ok(productsPage);
         }
-
+        Arrays.asList(1, 2, 3).stream().reduce(0, Integer::sum);
         return ResponseEntity.notFound().build();
     }
 
     @GetMapping("/{productId}")
     @PreAuthorize("hasAuthority('READ_ONE_PRODUCT')")
+    // @CrossOrigin(origins = "https://www.google.com")
     public ResponseEntity<Product> findOneById(@PathVariable Long productId){
         Optional<Product> product = productService.findOneById(productId);
 

@@ -31,6 +31,7 @@ public class AuthenticationController {
     // == LOGIN
     @PostMapping("/authenticate")
     @PreAuthorize("permitAll")
+    //@CrossOrigin
     public ResponseEntity<AuthenticationResponse> authenticate(
             @RequestBody @Valid AuthenticationRequest authenticationRequest){
 

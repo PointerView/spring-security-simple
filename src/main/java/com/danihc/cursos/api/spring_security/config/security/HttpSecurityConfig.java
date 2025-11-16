@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authorization.AuthorizationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -19,6 +20,11 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.RegexRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity // Habilita la seguridad web basada en Http Servlet
@@ -43,6 +49,7 @@ public class HttpSecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         SecurityFilterChain filterChain = http
+                .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable) // 1
                 .sessionManagement(sessMagConfig ->
                         sessMagConfig.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -56,6 +63,22 @@ public class HttpSecurityConfig {
                 })
                 .build();
         return filterChain;
+    }
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        // Origenes desde donde se permiten peticiones
+        configuration.setAllowedOrigins(Arrays.asList("https://www.google.com", "http://127.0.0.1:5500"));
+        // Verbos HTTP permitidos
+        configuration.setAllowedMethods(Arrays.asList("*")); // Todos
+        configuration.setAllowedHeaders(Arrays.asList("*")); // Todos
+        configuration.setAllowCredentials(true); // Que acepte cookies, bearer tokens...
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration); // Se aplica la configuracion a todos
+        // los controllers
+        return source;
     }
 
     // Toda la gestion de authorization gestionado mediante handler HTTP
