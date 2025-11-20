@@ -1,0 +1,32 @@
+version: '3.1'
+
+services:
+  db:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: course
+    container_name: my-mysql-docker-compose
+    volumes:
+      - mysql-volume:/var/lib/mysql
+
+  my-app:
+    build: .
+    image: my-app:v1.2
+    ports:
+      - 8585:9191
+    container_name: my-app-docker-compose
+    depends_on:
+      - db
+
+  client:
+    image: my-client-app:v1
+    ports:
+      - 8686:8080
+    container_name: my-client-app-container
+    depends_on:
+      - my-app
+
+volumes:
+  mysql-volume:
