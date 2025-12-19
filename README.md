@@ -25,4 +25,21 @@ de las propias funcionalidades de spring.
 
 ### Rama secundaria: ``Sistema de seguridad avanzado con BDD, y multiples ambientes incluido docker``
 
-En esta segunda rama quise implementar 
+En esta segunda rama quise implementar diferentes perfiles/ambientes de trabajo para el proyecto y a su vez dockerizar la solucion
+pero al final termine implementando la solucion como un Resource Server del protocolo de OAuth2.
+
+En este caso mantuve las demas implementaciones ya desarrolladas y solo sustitui las necesarias como el paso de usar los JWT signed
+por los encripted por el cambio de algoritmo a la hora de generar estos JWT.
+
+Tambien recalcar que aunque muchos otros proyectos implementan en él mismo tanto la parte de Resource Server como de Authorization
+Server, yo quise separarlos en dos proyectos diferentes primero por temas de entendimiento y segundo por posibles futuras necesidades
+de escalarlo siendo que si estan separados facilitaria todos estos aspectos.
+
+En cuanto a los profiles de trabajo, cree los tres principales, el local enfocado al desarrollo completo dentro del host mismo, esto
+lo hice para poder hacer uso de la BBDD H2 envedida para facilitar las pruebas y sean mas agiles. Luego hice el profile dev que es
+parecido al local pero con la diferencia que esta enfocado en el desarrollo relacionado con otros servicios dejando de usar la BBDD
+H2 y pasar a usar la compartida por los demas microservicios. Por ultimo estaria el profile docker que podria decirse que es el usado
+para springs que estan casi listos y se quieren probar en el environment dockerizado.
+
+
+#### La implementacion del Authorization-Server esta en el repo spring-oaut2-pkce
